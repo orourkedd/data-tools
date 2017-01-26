@@ -16,7 +16,9 @@
   "author": "orourkedd",
   "license": "MIT",
   "dependencies": {
-    "ramda": "^0.22.1"
+    "ramda": "^0.22.1",
+    "uuid": "^3.0.1",
+    "validator": "^6.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
