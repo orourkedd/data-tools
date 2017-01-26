@@ -7,7 +7,6 @@ const guid = (name) => {
     name,
     validators: [validators.notFalsey],
     default: () => uuid.v4(),
-    fake: 'name',
     transforms: [transforms.stringTrim]
   }
 }
@@ -17,7 +16,6 @@ const requiredString = (name) => {
     name,
     validators: [validators.notFalsey],
     default: '',
-    fake: 'name',
     transforms: [transforms.stringToUpperCase, transforms.stringTrim]
   }
 }
@@ -26,8 +24,7 @@ const numberGreaterThanZero = (name) => {
   return {
     name,
     validators: [validators.notFalsey, validators.numberGreaterThanZero],
-    default: 0,
-    fake: 'number'
+    default: 0
   }
 }
 
