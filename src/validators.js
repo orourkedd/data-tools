@@ -21,11 +21,11 @@ const numberGreaterThanZero = (fieldName, v) => {
 
 const address = (fieldName, v) => {
   return null
-  return {
-    type: 'address',
-    message: `${fieldName} must be greater than zero.`,
-    name: fieldName
-  }
+  // return {
+  //   type: 'address',
+  //   message: `${fieldName} must be greater than zero.`,
+  //   name: fieldName
+  // }
 }
 
 module.exports = {
