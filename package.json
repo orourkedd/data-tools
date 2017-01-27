@@ -1,6 +1,6 @@
 {
   "name": "entity-kit",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Tools for working with data.",
   "main": "lib/index.js",
   "scripts": {
@@ -17,8 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "ramda": "^0.22.1",
-    "uuid": "^3.0.1",
-    "validator": "^6.2.1"
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
