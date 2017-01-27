@@ -1,7 +1,8 @@
 const { isEmptyString } = require('./util')
+const { build } = require('./index')
 
-const notFalsey = (fieldName, v) => {
-  const isValid = v !== null && v !== undefined && !isEmptyString(v)
+const notFalsey = (fieldName, value, entity) => {
+  const isValid = value !== null && value !== undefined && !isEmptyString(value)
   if (isValid) return null
   return {
     type: 'required',
@@ -10,8 +11,8 @@ const notFalsey = (fieldName, v) => {
   }
 }
 
-const numberGreaterThanZero = (fieldName, v) => {
-  if (v > 0) return null
+const numberGreaterThanZero = (fieldName, value, entity) => {
+  if (value > 0) return null
   return {
     type: 'greaterThanZero',
     message: `${fieldName} must be greater than zero.`,
@@ -19,13 +20,9 @@ const numberGreaterThanZero = (fieldName, v) => {
   }
 }
 
-const address = (fieldName, v) => {
-  return null
-  // return {
-  //   type: 'address',
-  //   message: `${fieldName} must be greater than zero.`,
-  //   name: fieldName
-  // }
+const address = (fieldName, value, entity, fieldDefinition) => {
+  const { validator } = build(fieldDefinition.fields)
+  return validator(value)
 }
 
 module.exports = {

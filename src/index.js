@@ -17,9 +17,9 @@ function applyTransforms (fieldDefinitions, data) {
 }
 
 function runValidators (fieldDefinitions, data) {
-  let errors = map(({name, validators}) => {
-    const runValidator = (validator) => validator(name, data[name])
-    return map(runValidator, validators)
+  let errors = map((fieldDefinition) => {
+    const runValidator = (validator) => validator(fieldDefinition.name, data[fieldDefinition.name], data, fieldDefinition)
+    return map(runValidator, fieldDefinition.validators)
   }, fieldDefinitions)
 
   const flattenedErrors = flatten(errors)
@@ -30,8 +30,14 @@ function build (fieldDefinitions) {
   const normalizeFieldDefinitions = map(normalizeFieldDefinition, fieldDefinitions)
   const factory = (customFields = {}) => {
     const getDefault = (d) => typeof d === 'function' ? d() : d
-    const setDefault = (p, c) => {
-      p[c.name] = getDefault(c.default)
+    const setDefault = (p, fieldDefinition) => {
+      if (fieldDefinition.fields) {
+        const { factory: subFactory } = build(fieldDefinition.fields)
+        const subField = subFactory()
+        p[fieldDefinition.name] = subField
+      } else {
+        p[fieldDefinition.name] = getDefault(fieldDefinition.default)
+      }
       return p
     }
     const entityWithDefaults = reduce(setDefault, {}, normalizeFieldDefinitions)

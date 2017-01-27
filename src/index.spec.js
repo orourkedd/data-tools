@@ -1,5 +1,6 @@
 const transforms = require('./transforms')
 const validators = require('./validators')
+const fields = require('./fields')
 const { build } = require('./index')
 const { deepEqual } = require('assert')
 
@@ -67,6 +68,22 @@ describe('index.js', () => {
       const expected = { guid: 'abcd' }
       deepEqual(actual, expected)
     })
+
+    it('should build nested fields', () => {
+      const fieldDefinitions = [fields.address('workAddress')]
+      const { factory } = build(fieldDefinitions)
+      const actual = factory()
+      const expected = {
+        workAddress: {
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          zip: ''
+        }
+      }
+      deepEqual(actual, expected)
+    })
   })
 
   describe('validator()', () => {
@@ -95,6 +112,31 @@ describe('index.js', () => {
       const { validator } = build(fieldDefinitions)
       const actual = validator(data)
       const expected = []
+      deepEqual(actual, expected)
+    })
+
+    it('should validate sub fields', () => {
+      const fieldDefinitions = [
+        fields.guid('guid'),
+        fields.address('workAddress')
+      ]
+      const data = {
+        guid: '12345',
+        workAddress: {
+          address1: '1234 Main St',
+          address2: '',
+          city: '',
+          state: 'CA',
+          zip: '92119'
+        }
+      }
+      const { validator } = build(fieldDefinitions)
+      const actual = validator(data)
+      const expected = [{
+        type: 'required',
+        name: 'city',
+        message: 'city is required.'
+      }]
       deepEqual(actual, expected)
     })
   })

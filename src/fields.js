@@ -29,16 +29,36 @@ const numberGreaterThanZero = (name) => {
 }
 
 const address = (name) => {
+  let fields = [{
+    name: 'address1',
+    validators: [validators.notFalsey],
+    default: '',
+    transforms: [transforms.stringTrim]
+  }, {
+    name: 'address2',
+    default: '',
+    transforms: [transforms.stringTrim]
+  }, {
+    name: 'city',
+    validators: [validators.notFalsey],
+    default: '',
+    transforms: [transforms.stringTrim]
+  }, {
+    name: 'state',
+    validators: [validators.notFalsey],
+    default: '',
+    transforms: [transforms.stringTrim]
+  }, {
+    name: 'zip',
+    validators: [validators.notFalsey],
+    default: '',
+    transforms: [transforms.stringTrim]
+  }]
+
   return {
     name,
-    validators: [validators.address],
-    default: {
-      street: '',
-      city: '',
-      zip: '',
-      state: ''
-    },
-    fake: 'address'
+    fields,
+    validators: [validators.address]
   }
 }
 
