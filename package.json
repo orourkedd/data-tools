@@ -1,8 +1,9 @@
 {
   "name": "@orourkedd/data-tools",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tools for working with data.",
   "main": "lib/index.js",
+  "private": false,
   "scripts": {
     "test": "jest",
     "demo": "npm run transpile; node lib/demo/repos.js",
