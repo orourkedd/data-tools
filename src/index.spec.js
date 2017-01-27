@@ -133,9 +133,10 @@ describe('index.js', () => {
       const { validator } = build(fieldDefinitions)
       const actual = validator(data)
       const expected = [{
-        type: 'required',
-        name: 'city',
-        message: 'city is required.'
+        type: 'address',
+        name: 'workAddress',
+        errors: [{ type: 'required', message: 'city is required.', name: 'city' }],
+        message: 'workAddress has errors.'
       }]
       deepEqual(actual, expected)
     })
