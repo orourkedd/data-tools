@@ -27,7 +27,7 @@ const address = (fieldName, value, entity, fieldDefinition) => {
       type: 'address',
       name: fieldName,
       message: `${fieldName} is not an object.`
-    }];
+    }]
   }
 
   const errors = validator(value)
