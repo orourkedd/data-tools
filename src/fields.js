@@ -1,6 +1,7 @@
 const validators = require('./validators')
 const transforms = require('./transforms')
 const uuid = require('uuid')
+const { concat } = require('ramda')
 
 const guid = (name) => {
   return {
@@ -11,12 +12,17 @@ const guid = (name) => {
   }
 }
 
-const requiredString = (name) => {
+const text = (name, options = {}) => {
+  let fieldValidators = options.validators || []
+  if (options.required === true) fieldValidators.push(validators.notFalsey)
+  let defaultTransforms = [transforms.stringTrim]
+  let fieldTransforms = concat(defaultTransforms, options.transforms || [])
+
   return {
     name,
-    validators: [validators.notFalsey],
-    default: '',
-    transforms: [transforms.stringToUpperCase, transforms.stringTrim]
+    validators: fieldValidators,
+    default: options.default || '',
+    transforms: fieldTransforms
   }
 }
 
@@ -64,7 +70,7 @@ const address = (name) => {
 
 module.exports = {
   guid,
-  requiredString,
+  text,
   numberGreaterThanZero,
   address
 }
