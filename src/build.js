@@ -19,6 +19,10 @@ const applyValidators = curry((validators, value, path) => {
   return map((v) => v(value, path), validators)
 })
 
+function getDefaultValue (v) {
+  return typeof v === 'function' ? v() : v
+}
+
 function buildListOfScalarSubfields (fieldDefinition, userFields = {}) {
   const { name } = fieldDefinition
   const factory = buildFactory(fieldDefinition.fields)
@@ -42,7 +46,7 @@ function buildScalarSubfields (fieldDefinition, userFields = {}) {
 
 function buildScalar (fieldDefinition, userFields = {}) {
   const { name, defaultValue } = fieldDefinition
-  const value = userFields[name] || defaultValue
+  const value = userFields[name] || getDefaultValue(defaultValue)
   const t = applyTransforms(fieldDefinition.transforms, value)
   return t
 }
@@ -97,7 +101,7 @@ function validateScalar (fieldDefinition, value, path) {
 }
 
 function buildValidator (fieldDefinitions) {
-  return function (entity, path = []) {
+  return function (entity = {}, path = []) {
     let errors = []
     const s1 = reduce((errors, fieldDefinition) => {
       const nfd = normalizeFieldDefinition(fieldDefinition)

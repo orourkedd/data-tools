@@ -7,7 +7,7 @@ const fieldDefinitions = [{
   name: 'guid',
   validators: [validators.notFalsey],
   transforms: [transforms.stringTrim],
-  defaultValue: '12345'
+  defaultValue: () => '12345'
 }, {
   name: 'options',
   fields: [{
