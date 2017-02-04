@@ -254,4 +254,60 @@ describe('fields.js', () => {
       deepEqual(actual, expected)
     })
   })
+
+  describe('address()', () => {
+    it('should create an address field definition', () => {
+      const actual = fields.address('workAddress')
+      const expected = {
+        name: 'workAddress',
+        fields: [
+          fields.text('address1'),
+          fields.text('address2'),
+          fields.text('city'),
+          fields.text('state', { transforms: [transforms.stringToUpperCase] }),
+          fields.text('zip')
+        ]
+      }
+      deepEqual(actual, expected)
+    })
+
+    it('should build the address field', () => {
+      const fieldDefinitions = [fields.address('workAddress')]
+      const { factory } = build(fieldDefinitions)
+      const actual = factory()
+      const expected = {
+        workAddress: {
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          zip: ''
+        }
+      }
+      deepEqual(actual, expected)
+    })
+
+    it('should use required option', () => {
+      const fieldDefinitions = [fields.address('workAddress', { required: true })]
+      const { validate } = build(fieldDefinitions)
+      const actual = validate()
+      const expected = [{
+        validator: 'notFalsey',
+        path: ['workAddress', 'address1']
+      }, {
+        validator: 'notFalsey',
+        path: ['workAddress', 'address2']
+      }, {
+        validator: 'notFalsey',
+        path: ['workAddress', 'city']
+      }, {
+        validator: 'notFalsey',
+        path: ['workAddress', 'state']
+      }, {
+        validator: 'notFalsey',
+        path: ['workAddress', 'zip']
+      }]
+      deepEqual(actual, expected)
+    })
+  })
 })

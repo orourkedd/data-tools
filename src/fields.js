@@ -35,9 +35,23 @@ function phone (name, options = {}) {
   return text(name, options)
 }
 
+function address (name, options = {}) {
+  return {
+    name,
+    fields: [
+      text('address1', { required: options.required }),
+      text('address2', { required: options.required }),
+      text('city', { required: options.required }),
+      text('state', { required: options.required, transforms: [t.stringToUpperCase] }),
+      text('zip', { required: options.required })
+    ]
+  }
+}
+
 module.exports = {
   guid,
   text,
   url,
-  phone
+  phone,
+  address
 }
