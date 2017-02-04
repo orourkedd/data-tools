@@ -1,4 +1,4 @@
-const t  = require('./transforms')
+const t = require('./transforms')
 const v = require('./validators')
 const uuid = require('uuid')
 

@@ -3,7 +3,7 @@ const fields = require('./fields')
 const uuid = require('uuid')
 const transforms = require('./transforms')
 const validators = require('./validators')
-const { build }  = require('./build')
+const { build } = require('./build')
 
 describe('fields.js', () => {
   describe('guid()', () => {

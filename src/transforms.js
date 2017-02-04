@@ -16,7 +16,7 @@ function stringToLowerCase (s = '') {
 function stringNumbersOnly (s) {
   if (!s) return s
   if (typeof s !== 'string') return s
-  return s.replace(/\D/g,'')
+  return s.replace(/\D/g, '')
 }
 
 module.exports = {
