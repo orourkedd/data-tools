@@ -39,6 +39,15 @@ const fieldDefinitions = [{
     transforms: [transforms.stringTrim, transforms.stringToUpperCase],
     defaultValue: ''
   }]
+}, {
+  name: 'companies',
+  list: true,
+  fields: [{
+    name: 'roles',
+    list: true,
+    validators: [validators.notFalsey],
+    transforms: [transforms.stringTrim, transforms.stringToLowerCase]
+  }]
 }]
 
 describe('build.js', () => {
@@ -53,7 +62,8 @@ describe('build.js', () => {
             frequency: 'weekly'
           },
           roles: [],
-          addresses: []
+          addresses: [],
+          companies: []
         }
         deepEqual(actual, expected)
       })
@@ -76,7 +86,8 @@ describe('build.js', () => {
           addresses: [{
             city: 'San Diego',
             state: ''
-          }]
+          }],
+          companies: []
         }
         deepEqual(actual, expected)
       })
@@ -91,7 +102,10 @@ describe('build.js', () => {
           roles: ['  client   '],
           options: {
             frequency: ' daily  '
-          }
+          },
+          companies: [{
+            roles: [null, 'CareGiver ']
+          }]
         }
         const actual = factory(data)
         const expected = {
@@ -103,6 +117,9 @@ describe('build.js', () => {
           addresses: [{
             city: 'San Diego',
             state: 'CA'
+          }],
+          companies: [{
+            roles: [null, 'caregiver']
           }]
         }
         deepEqual(actual, expected)
@@ -124,6 +141,9 @@ describe('build.js', () => {
             city: 'San Diego'
           }, {
             city: false
+          }],
+          companies: [{
+            roles: ['caregiver', null]
           }]
         }
         const actual = validate(data)
@@ -145,6 +165,9 @@ describe('build.js', () => {
         }, {
           validator: 'notFalsey',
           path: ['addresses', '2', 'city']
+        }, {
+          validator: 'notFalsey',
+          path: ['companies', '0', 'roles', '1']
         }]
         deepEqual(actual, expected)
       })

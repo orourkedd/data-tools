@@ -23,14 +23,14 @@ function buildListOfScalarSubfields (fieldDefinition, userFields = {}) {
   const { name } = fieldDefinition
   const factory = buildFactory(fieldDefinition.fields)
   const values = userFields[name] || []
-  return map(factory, values)
+  return map(factory, values || [])
 }
 
 function buildListOfScalars (fieldDefinition, userFields = {}) {
   const { name } = fieldDefinition
   const values = userFields[name] || []
   const t = applyTransforms(fieldDefinition.transforms)
-  const l = map(t, values)
+  const l = map(t, values || [])
   return l
 }
 
@@ -75,7 +75,7 @@ function validateListOfScalarSubfields (fieldDefinition, values, path) {
     const p = clone(path)
     p.push(i.toString())
     return validate(value, p)
-  }, values)
+  }, values || [])
 }
 
 function validateListOfScalars (fieldDefinition, values, path) {
