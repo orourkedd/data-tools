@@ -1,6 +1,6 @@
 {
   "name": "entity-kit",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Tools for working with data.",
   "main": "lib/index.js",
   "scripts": {
