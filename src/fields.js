@@ -24,7 +24,20 @@ function text (name, options = {}) {
   }
 }
 
+function url (name, options = {}) {
+  options.validators = (options.validators || []).concat(v.url)
+  return text(name, options)
+}
+
+function phone (name, options = {}) {
+  options.validators = (options.validators || []).concat(v.phone)
+  options.transforms = (options.transforms || []).concat(t.stringNumbersOnly)
+  return text(name, options)
+}
+
 module.exports = {
   guid,
-  text
+  text,
+  url,
+  phone
 }
