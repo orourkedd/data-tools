@@ -2,10 +2,10 @@ const t = require('./transforms')
 const v = require('./validators')
 const uuid = require('uuid')
 
-function guid (name) {
+function guid (name, options = {}) {
   return {
     name,
-    defaultValue: uuid.v4,
+    defaultValue: options.defaultValue === undefined ? uuid.v4 : options.defaultValue,
     transforms: [t.stringTrim],
     validators: [v.notFalsey]
   }
