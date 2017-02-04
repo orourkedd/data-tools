@@ -1,11 +1,12 @@
-const stringToUpperCase = (s) => (s || '').toUpperCase()
+function stringTrim (s = '') {
+  return s.trim()
+}
 
-const stringTrim = (s) => (s || '').trim()
-
-const phone = (p) => (p || '').replace(/\D/g,'')
+function stringToUpperCase (s = '') {
+  return s.toUpperCase()
+}
 
 module.exports = {
-  stringToUpperCase,
   stringTrim,
-  phone
+  stringToUpperCase
 }

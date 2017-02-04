@@ -1,319 +1,153 @@
+const { build } = require('./build')
+const { deepEqual } = require('assert')
 const transforms = require('./transforms')
 const validators = require('./validators')
-const fields = require('./fields')
-const { build } = require('./index')
-const { deepEqual } = require('assert')
 
-describe('index.js', () => {
-  describe('factory()', () => {
-    describe('single', () => {
-      it('should apply transforms', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim, transforms.stringToUpperCase]
-        }]
-        const data = { guid: ' 123abc  ' }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: '123ABC' }
-        deepEqual(actual, expected)
-      })
+const fieldDefinitions = [{
+  name: 'guid',
+  validators: [validators.notFalsey],
+  transforms: [transforms.stringTrim],
+  defaultValue: '12345'
+}, {
+  name: 'options',
+  fields: [{
+    name: 'frequency',
+    validators: [validators.notFalsey],
+    transforms: [transforms.stringTrim],
+    defaultValue: 'weekly'
+  }]
+}, {
+  name: 'roles',
+  list: true,
+  // listValidators: [atLeastOneElement],
+  // listTransforms: [sortList],
+  transforms: [transforms.stringTrim],
+  validators: [validators.notFalsey]
+}, {
+  name: 'addresses',
+  list: true,
+  // listValidators: [atLeastOneElement],
+  // listTransforms: [sortListByProperty('city')],
+  fields: [{
+    name: 'city',
+    validators: [validators.notFalsey],
+    transforms: [transforms.stringTrim],
+    defaultValue: ''
+  }, {
+    name: 'state',
+    // validators: [required],
+    transforms: [transforms.stringTrim, transforms.stringToUpperCase],
+    defaultValue: ''
+  }]
+}]
 
-      it('should apply defaults', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim],
-          default: 'abcd'
-        }]
-        const data = { guid: 'abcd' }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: 'abcd' }
-        deepEqual(actual, expected)
-      })
-
-      it('should apply defaults from functions', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim],
-          default: () => 'abcd'
-        }]
-        const data = { guid: 'abcd' }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: 'abcd' }
-        deepEqual(actual, expected)
-      })
-
-      it('should apply transforms to defaults', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim],
-          default: () => 'abcd   \n   '
-        }]
-        const data = { guid: 'abcd' }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: 'abcd' }
-        deepEqual(actual, expected)
-      })
-
-      it('should clean the object from extraneous fields', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim]
-        }]
-        const data = { guid: 'abcd', foo: 'bar' }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: 'abcd' }
-        deepEqual(actual, expected)
-      })
-
-      it('should build nested fields', () => {
-        const fieldDefinitions = [fields.address('workAddress')]
+describe('build.js', () => {
+  describe('build()', () => {
+    describe('factory()', () => {
+      it('should create factory from field definitions', () => {
         const { factory } = build(fieldDefinitions)
         const actual = factory()
         const expected = {
-          workAddress: {
-            address1: '',
-            address2: '',
-            city: '',
-            state: '',
-            zip: ''
-          }
+          guid: '12345',
+          options: {
+            frequency: 'weekly'
+          },
+          roles: [],
+          addresses: []
         }
         deepEqual(actual, expected)
       })
-    })
 
-    describe('list', () => {
-      it('should apply transforms', () => {
-        const fieldDefinitions = [{
-          name: 'guids',
-          transforms: [transforms.stringTrim, transforms.stringToUpperCase],
-          list: true
-        }]
-        const data = { guids: [' 123abc  '] }
+      it('should use fields passed into factory', () => {
         const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guids: ['123ABC'] }
-        deepEqual(actual, expected)
-      })
-
-      it('should apply defaults', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim],
-          default: 'abcd',
-          list: true
-        }]
-        const data = { guid: ['abcd'] }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: ['abcd'] }
-        deepEqual(actual, expected)
-      })
-
-      it('should apply defaults from functions', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim],
-          default: () => 'abcd',
-          list: true
-        }]
-        const data = { guid: ['abcd'] }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: ['abcd'] }
-        deepEqual(actual, expected)
-      })
-
-      it('should apply transforms to defaults', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim],
-          default: () => 'abcd   \n   ',
-          list: true
-        }]
-        const data = { guid: ['abcd'] }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: ['abcd'] }
-        deepEqual(actual, expected)
-      })
-
-      it('should clean the object from extraneous fields', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          transforms: [transforms.stringTrim],
-          list: true
-        }]
-        const data = { guid: ['abcd'], foo: 'bar' }
-        const { factory } = build(fieldDefinitions)
-        const actual = factory(data)
-        const expected = { guid: ['abcd'] }
-        deepEqual(actual, expected)
-      })
-
-      it('should build nested fields', () => {
-        const fieldDefinitions = [fields.address('addresses', { list: true })]
-        const { factory } = build(fieldDefinitions)
-        const actual = factory({ addresses: [{ city: 'San Diego'}] })
-        const expected = {
+        const data = {
           addresses: [{
-            address1: '',
-            address2: '',
+            city: 'San Diego'
+          }],
+          roles: ['client']
+        }
+        const actual = factory(data)
+        const expected = {
+          guid: '12345',
+          options: {
+            frequency: 'weekly'
+          },
+          roles: ['client'],
+          addresses: [{
             city: 'San Diego',
-            state: '',
-            zip: ''
+            state: ''
           }]
         }
         deepEqual(actual, expected)
       })
 
-      it('should build empt nested fields', () => {
-        const fieldDefinitions = [fields.address('addresses', { list: true })]
+      it('should apply transforms', () => {
         const { factory } = build(fieldDefinitions)
-        const actual = factory()
-        const expected = { addresses: [] }
-        deepEqual(actual, expected)
-      })
-    })
-  })
-
-  describe('validator()', () => {
-    describe('single', () => {
-      it('should return validation errors', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          validators: [validators.notFalsey]
-        }]
-        const data = { guid: '  ' }
-        const { validator } = build(fieldDefinitions)
-        const actual = validator(data)
-        const expected = [{
-          type: 'required',
-          name: 'guid'
-        }]
-        deepEqual(actual, expected)
-      })
-
-      it('should not return validation errors for valid fields', () => {
-        const fieldDefinitions = [{
-          name: 'guid',
-          validators: [validators.notFalsey]
-        }]
-        const data = { guid: '1234' }
-        const { validator } = build(fieldDefinitions)
-        const actual = validator(data)
-        const expected = []
-        deepEqual(actual, expected)
-      })
-
-      it('should validate sub fields', () => {
-        const fieldDefinitions = [
-          fields.guid('guid'),
-          fields.address('workAddress')
-        ]
         const data = {
-          guid: '12345',
-          workAddress: {
-            address1: '1234 Main St',
-            address2: '',
-            city: '',
-            state: '',
-            zip: '92119'
+          addresses: [{
+            city: 'San Diego  ',
+            state: ' ca '
+          }],
+          roles: ['  client   '],
+          options: {
+            frequency: ' daily  '
           }
         }
-        const { validator } = build(fieldDefinitions)
-        const actual = validator(data)
-        const expected = [{
-          subfield: true,
-          name: 'workAddress',
-          type: 'address',
-          error: {
-            name: 'city',
-            type: 'required'
-          }
-        }, {
-          subfield: true,
-          type: 'address',
-          name: 'workAddress',
-          error: {
-            name: 'state',
-            type: 'required'
-          }
-        }]
+        const actual = factory(data)
+        const expected = {
+          guid: '12345',
+          options: {
+            frequency: 'daily'
+          },
+          roles: ['client'],
+          addresses: [{
+            city: 'San Diego',
+            state: 'CA'
+          }]
+        }
         deepEqual(actual, expected)
       })
     })
-  })
 
-  describe('list', () => {
-    it('should return validation errors', () => {
-      const fieldDefinitions = [{
-        name: 'guids',
-        validators: [validators.notFalsey],
-        list: true
-      }]
-      const data = { guids: ['abc', '  '] }
-      const { validator } = build(fieldDefinitions)
-      const actual = validator(data)
-      const expected = [{
-        list: true,
-        name: 'guids',
-        index: 0,
-        error: {
-          type: 'required',
-          name: 'guids'
+    describe('validate()', () => {
+      it('should validator fields', () => {
+        const { validate } = build(fieldDefinitions)
+        const data = {
+          guid: null,
+          options: {
+            frequency: null
+          },
+          roles: [null, false],
+          addresses: [{
+            city: null
+          }, {
+            city: 'San Diego'
+          }, {
+            city: false
+          }]
         }
-      }]
-      deepEqual(actual, expected)
-    })
-
-    it('should not return validation errors for valid fields', () => {
-      const fieldDefinitions = [{
-        name: 'guids',
-        validators: [validators.notFalsey],
-        list: true
-      }]
-      const data = { guids: ['1234'] }
-      const { validator } = build(fieldDefinitions)
-      const actual = validator(data)
-      const expected = []
-      deepEqual(actual, expected)
-    })
-
-    it('should validate sub fields', () => {
-      const fieldDefinitions = [
-        fields.guid('guid'),
-        fields.address('addresses', { list: true })
-      ]
-      const data = {
-        guid: '12345',
-        addresses: [{
-          address1: '1234 Main St',
-          address2: '',
-          city: '',
-          state: 'CA',
-          zip: '92119'
+        const actual = validate(data)
+        const expected = [{
+          validator: 'notFalsey',
+          path: ['guid']
+        }, {
+          validator: 'notFalsey',
+          path: ['options', 'frequency']
+        }, {
+          validator: 'notFalsey',
+          path: ['roles', '0']
+        }, {
+          validator: 'notFalsey',
+          path: ['roles', '1']
+        }, {
+          validator: 'notFalsey',
+          path: ['addresses', '0', 'city']
+        }, {
+          validator: 'notFalsey',
+          path: ['addresses', '2', 'city']
         }]
-      }
-      const { validator } = build(fieldDefinitions)
-      const actual = validator(data)
-      const expected = [{
-        subfield: true,
-        list: true,
-        name: 'addresses',
-        type: 'address',
-        index: 0,
-        error: {
-          name: 'city',
-          type: 'required'
-        }
-      }]
-      deepEqual(actual, expected)
+        deepEqual(actual, expected)
+      })
     })
   })
 })

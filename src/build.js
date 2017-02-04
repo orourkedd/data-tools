@@ -1,133 +1,148 @@
 const {
   addIndex,
+  clone,
   curry,
   filter,
   flatten,
   map,
   merge,
-  mergeAll,
-  pick,
-  pickBy,
-  prop,
-  reduce,
+  reduce
 } = require('ramda')
 
-function clean (fieldDefinitions, data) {
-  const nameProp = prop('name')
-  const fieldNames = map(nameProp, fieldDefinitions)
-  return pick(fieldNames, data)
+const applyTransforms = curry((transforms, value) => {
+  return reduce((p, transform) => {
+    return transform(p)
+  }, value, transforms)
+})
+
+const applyValidators = curry((validators, value, path) => {
+  return map((v) => v(value, path), validators)
+})
+
+function buildListOfScalarSubfields (fieldDefinition, userFields = {}) {
+  const { name } = fieldDefinition
+  const factory = buildFactory(fieldDefinition.fields)
+  const values = userFields[name] || []
+  return map(factory, values)
 }
 
-function applyTransforms (fieldDefinitions, data) {
-  return reduce((data, { name, transforms, list }) => {
-    if (!transforms || transforms.length === 0) return data
-    const originalValue = data[name]
-    const transformValue = (value, transform) => transform(value)
-    let transformedValue
-    if (list) {
-      transformedValue = map((v) => reduce(transformValue, v, transforms), originalValue)
-    } else {
-      transformedValue = reduce(transformValue, originalValue, transforms)
-    }
-    return merge(data, { [name]: transformedValue })
-  }, data, fieldDefinitions)
+function buildListOfScalars (fieldDefinition, userFields = {}) {
+  const { name } = fieldDefinition
+  const values = userFields[name] || []
+  const t = applyTransforms(fieldDefinition.transforms)
+  const l = map(t, values)
+  return l
 }
 
-function runValidators (fieldDefinitions, entity) {
-  let s1 = map((fieldDefinition) => {
-    const { name, validators: fieldValidators, list } = fieldDefinition
-    const value = entity[name]
-
-    const run = (name, value, entity, fieldDefinition) => {
-      const v = (validator) => validator(name, value, entity, fieldDefinition)
-      return map(v, fieldValidators)
-    }
-
-    if (list) {
-      const mapIndexed = addIndex(map)
-      return map((value) => {
-        const l1 = run(name, value, entity, fieldDefinition)
-        const l2 = filter(v => v, l1)
-        if (l2.length === 0) return
-        return mapIndexed((listElementError, i) => {
-          if (Array.isArray(listElementError)) {
-            return map((e) => {
-              return {
-                name,
-                list: true,
-                index: i,
-                subfield: true,
-                type: e.type,
-                error: e.error
-              }
-            }, listElementError)
-          } else {
-            return {
-              name,
-              list: true,
-              index: i,
-              error: listElementError
-            }
-          }
-        }, l2)
-      }, value)
-    } else {
-      return run(name, value, entity, fieldDefinition)
-    }
-  }, fieldDefinitions)
-
-  const s2 = flatten(s1)
-  const s3 = filter(v => v, s2)
-  return s3
+function buildScalarSubfields (fieldDefinition, userFields = {}) {
+  const { name } = fieldDefinition
+  const factory = buildFactory(fieldDefinition.fields)
+  return factory(userFields[name])
 }
 
-function build (fieldDefinitions) {
-  const normalizeFieldDefinitions = map(normalizeFieldDefinition, fieldDefinitions)
-  const factory = (customFields = {}) => {
-    const getDefault = (d) => typeof d === 'function' ? d() : d
-    const setDefault = (p, fieldDefinition) => {
-      if (fieldDefinition.list === true) {
-        if (fieldDefinition.fields) {
-          let { factory: subFactoryList } = build(fieldDefinition.fields)
-          p[fieldDefinition.name] = map(subFactoryList, p[fieldDefinition.name] || [])
-        } else {
-          p[fieldDefinition.name] = p[fieldDefinition.name] || []
-        }
-        return p
-      }
+function buildScalar (fieldDefinition, userFields = {}) {
+  const { name, defaultValue } = fieldDefinition
+  const value = userFields[name] || defaultValue
+  const t = applyTransforms(fieldDefinition.transforms, value)
+  return t
+}
 
-      if (fieldDefinition.fields) {
-        const { factory: subFactory } = build(fieldDefinition.fields)
-        const subfield = subFactory()
-        p[fieldDefinition.name] = subfield
+function buildFactory (fieldDefinitions) {
+  return function (userFields = {}) {
+    const s1 = reduce((entity, fieldDefinition) => {
+      const nfd = normalizeFieldDefinition(fieldDefinition)
+      const { list, fields, name } = fieldDefinition
+      if (list === true && fields) {
+        entity[name] = buildListOfScalarSubfields(nfd, userFields)
+      } else if (list === true) {
+        entity[name] = buildListOfScalars(nfd, userFields)
+      } else if (fields) {
+        entity[name] = buildScalarSubfields(nfd, userFields)
       } else {
-        p[fieldDefinition.name] = p[fieldDefinition.name] || getDefault(fieldDefinition.default)
+        entity[name] = buildScalar(nfd, userFields)
       }
-      return p
-    }
-    const entityWithDefaults = reduce(setDefault, customFields, normalizeFieldDefinitions)
-    const listDefinitions = filter((f) => f.list, normalizeFieldDefinitions)
-    const listKeys = map((f) => f.name, listDefinitions)
-    const lists = pick(listKeys, customFields)
-    const merged = mergeAll([entityWithDefaults, customFields, lists])
-    const entityWithTransformations = applyTransforms(normalizeFieldDefinitions, merged)
-    const cleaned = clean(fieldDefinitions, entityWithTransformations)
-    return cleaned
-  }
 
-  const validator = curry(runValidators)(normalizeFieldDefinitions)
-  return { factory, validator }
+      return entity
+    }, {}, fieldDefinitions)
+    return s1
+  }
 }
 
-function normalizeFieldDefinition (definition) {
+function validateListOfScalarSubfields (fieldDefinition, values, path) {
+  const validate = buildValidator(fieldDefinition.fields)
+  const mapIndexed = addIndex(map)
+  return mapIndexed((value, i) => {
+    const p = clone(path)
+    p.push(i.toString())
+    return validate(value, p)
+  }, values)
+}
+
+function validateListOfScalars (fieldDefinition, values, path) {
+  const mapIndexed = addIndex(map)
+  return mapIndexed((value, i) => {
+    const p = clone(path)
+    p.push(i.toString())
+    return applyValidators(fieldDefinition.validators, value, p)
+  }, values)
+}
+
+function validateScalarSubfields (fieldDefinition, value, path) {
+  const validate = buildValidator(fieldDefinition.fields)
+  return validate(value, path)
+}
+
+function validateScalar (fieldDefinition, value, path) {
+  return applyValidators(fieldDefinition.validators, value, path)
+}
+
+function buildValidator (fieldDefinitions) {
+  return function (entity, path = []) {
+    let errors = []
+    const s1 = reduce((errors, fieldDefinition) => {
+      const nfd = normalizeFieldDefinition(fieldDefinition)
+      const { list, fields, name } = fieldDefinition
+      const value = entity[name]
+      const p = clone(path)
+      p.push(name)
+      let e
+      if (list === true && fields) {
+        e = validateListOfScalarSubfields(nfd, value, p)
+      } else if (list === true) {
+        e = validateListOfScalars(nfd, value, p)
+      } else if (fields) {
+        e = validateScalarSubfields(nfd, value, p)
+      } else {
+        e = validateScalar(nfd, value, p)
+      }
+
+      errors.push(e)
+      return errors
+    }, errors, fieldDefinitions)
+
+    const s2 = flatten(s1)
+    const s3 = filter(v => v, s2)
+    return s3
+  }
+}
+
+function normalizeFieldDefinition (fieldDefinition) {
   return merge({
     transforms: [],
     validators: []
-  }, definition)
+  }, fieldDefinition)
+}
+
+function build (fieldDefinitions) {
+  const factory = buildFactory(fieldDefinitions)
+  const validate = buildValidator(fieldDefinitions)
+
+  return {
+    factory,
+    validate
+  }
 }
 
 module.exports = {
-  applyTransforms,
-  runValidators,
   build
 }
