@@ -37,4 +37,61 @@ describe('fields.js', () => {
       deepEqual(actual, expected)
     })
   })
+
+  describe('text()', () => {
+    it('should create a text field definition', () => {
+      const actual = fields.text('firstName')
+      const expected = {
+        name: 'firstName',
+        defaultValue: '',
+        transforms: [transforms.stringTrim],
+        validators: []
+      }
+      deepEqual(actual, expected)
+    })
+
+    it('should build the text field', () => {
+      const fieldDefinitions = [fields.text('firstName')]
+      const { factory } = build(fieldDefinitions)
+      const actual = factory()
+      const expected = {
+        firstName: ''
+      }
+      deepEqual(actual, expected)
+    })
+
+    it('should use required option', () => {
+      const fieldDefinitions = [fields.text('firstName', { required: true })]
+      const { validate } = build(fieldDefinitions)
+      const actual = validate()
+      const expected = [{
+        validator: 'notFalsey',
+        path: ['firstName']
+      }]
+      deepEqual(actual, expected)
+    })
+
+    it('should use custom validators', () => {
+      const fieldDefinitions = [fields.text('firstName', { validators: [validators.notFalsey] })]
+      const { validate } = build(fieldDefinitions)
+      const actual = validate()
+      const expected = [{
+        validator: 'notFalsey',
+        path: ['firstName']
+      }]
+      deepEqual(actual, expected)
+    })
+
+    it('should use custom transforms', () => {
+      const fieldDefinitions = [fields.text('firstName', { transforms: [transforms.stringToUpperCase] })]
+      const { factory } = build(fieldDefinitions)
+      const actual = factory({
+        firstName: 'frankie'
+      })
+      const expected = {
+        firstName: 'FRANKIE'
+      }
+      deepEqual(actual, expected)
+    })
+  })
 })

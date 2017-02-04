@@ -1,16 +1,30 @@
-const transforms = require('./transforms')
-const validators = require('./validators')
+const t  = require('./transforms')
+const v = require('./validators')
 const uuid = require('uuid')
 
 function guid (name) {
   return {
     name,
     defaultValue: uuid.v4,
-    transforms: [transforms.stringTrim],
-    validators: [validators.notFalsey]
+    transforms: [t.stringTrim],
+    validators: [v.notFalsey]
+  }
+}
+
+function text (name, options = {}) {
+  const transforms = [t.stringTrim].concat(options.transforms || [])
+  const validators = options.validators || []
+  if (options.required === true) validators.push(v.notFalsey)
+
+  return {
+    name,
+    defaultValue: '',
+    transforms,
+    validators
   }
 }
 
 module.exports = {
-  guid
+  guid,
+  text
 }
