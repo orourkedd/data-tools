@@ -71,7 +71,6 @@ function number (name, options = {}) {
 
   return {
     name,
-    defaultValue: 0,
     transforms: options.transforms,
     validators,
     defaultValue: options.defaultValue
