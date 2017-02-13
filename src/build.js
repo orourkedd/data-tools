@@ -15,8 +15,8 @@ const applyTransforms = curry((transforms, value) => {
   }, value, transforms)
 })
 
-const applyValidators = curry((validators, value, path) => {
-  return map((v) => v(value, path), validators)
+const applyValidators = curry((validators, value, path, fieldDefinition) => {
+  return map((v) => v(value, path, fieldDefinition), validators)
 })
 
 function getDefaultValue (v) {
@@ -87,7 +87,7 @@ function validateListOfScalars (fieldDefinition, values, path) {
   return mapIndexed((value, i) => {
     const p = clone(path)
     p.push(i.toString())
-    return applyValidators(fieldDefinition.validators, value, p)
+    return applyValidators(fieldDefinition.validators, value, p, fieldDefinition)
   }, values)
 }
 
@@ -97,7 +97,7 @@ function validateScalarSubfields (fieldDefinition, value, path) {
 }
 
 function validateScalar (fieldDefinition, value, path) {
-  return applyValidators(fieldDefinition.validators, value, path)
+  return applyValidators(fieldDefinition.validators, value, path, fieldDefinition)
 }
 
 function buildValidator (fieldDefinitions) {

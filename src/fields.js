@@ -1,6 +1,7 @@
 const t = require('./transforms')
 const v = require('./validators')
 const uuid = require('uuid')
+const { merge } = require('ramda')
 
 function guid (name, options = {}) {
   return {
@@ -48,10 +49,40 @@ function address (name, options = {}) {
   }
 }
 
+function enumeration (name, options = {}) {
+  const fieldValidators = (options.validators || []).concat(v.enumeration)
+
+  return {
+    name,
+    values: options.values,
+    validators: fieldValidators
+  }
+}
+
+function boolean (name, options = {}) {
+  return enumeration(name, merge(options, {
+    values: [true, false]
+  }))
+}
+
+function number (name, options = {}) {
+  const validators = (options.validators || []).concat(v.number)
+
+  return {
+    name,
+    defaultValue: 0,
+    transforms: options.transforms,
+    validators
+  }
+}
+
 module.exports = {
   guid,
   text,
   url,
   phone,
-  address
+  address,
+  enumeration,
+  boolean,
+  number
 }

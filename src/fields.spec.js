@@ -4,6 +4,7 @@ const uuid = require('uuid')
 const transforms = require('./transforms')
 const validators = require('./validators')
 const { build } = require('./build')
+const { forEach } = require('ramda')
 
 describe('fields.js', () => {
   describe('guid()', () => {
@@ -308,6 +309,74 @@ describe('fields.js', () => {
         path: ['workAddress', 'zip']
       }]
       deepEqual(actual, expected)
+    })
+  })
+
+  describe('enumeration()', () => {
+    it('should create an enumeration field', () => {
+      const fieldDefinitions = [fields.enumeration('status', { values: [1, 2, 3] })]
+      const { validate } = build(fieldDefinitions)
+
+      forEach((i) => {
+        const actual = validate({
+          status: i
+        })
+        const expected = []
+        deepEqual(actual, expected)
+      }, [1, 2, 3])
+
+      const actual = validate({
+        status: 5
+      })
+      const expected = [{ validator: 'enumeration', path: ['status'] }]
+      deepEqual(actual, expected)
+    })
+
+    it('should validate an enumeration as a subfield', () => {
+      const fieldDefinitions = [{
+        name: 'test',
+        fields: [fields.enumeration('status', { values: [1, 2, 3] })]
+      }]
+      const { validate } = build(fieldDefinitions)
+
+      forEach((i) => {
+        const actual = validate({
+          test: {
+            status: i
+          }
+        })
+        const expected = []
+        deepEqual(actual, expected)
+      }, [1, 2, 3])
+
+      const actual = validate({
+        test: {
+          status: 5
+        }
+      })
+      const expected = [{ validator: 'enumeration', path: ['test', 'status'] }]
+      deepEqual(actual, expected)
+    })
+  })
+
+  describe('boolean()', () => {
+    it('should return a boolean field', () => {
+      const fieldDefinitions = [fields.boolean('flag')]
+      const { validate } = build(fieldDefinitions)
+      deepEqual(validate({ flag: 1 }), [{ validator: 'enumeration', path: ['flag'] }])
+      deepEqual(validate({ flag: true }), [])
+      deepEqual(validate({ flag: false }), [])
+    })
+  })
+
+  describe('number()', () => {
+    it('should return a number field', () => {
+      const fieldDefinitions = [fields.number('count')]
+      const { validate } = build(fieldDefinitions)
+      deepEqual(validate({ count: 'f' }), [{ validator: 'number', path: ['count'] }])
+      deepEqual(validate({ count: 0 }), [])
+      deepEqual(validate({ count: 37 }), [])
+      deepEqual(validate({ count: 37.5 }), [])
     })
   })
 })

@@ -29,8 +29,41 @@ function phone (value, path) {
   }
 }
 
+function enumeration (value, path, fieldDefinition) {
+  const { values } = fieldDefinition
+  if (values.indexOf(value) > -1) return
+
+  return {
+    validator: 'enumeration',
+    path
+  }
+}
+
+function boolean (value, path) {
+  if (value === undefined) return
+  if (value !== true && value !== false) {
+    return {
+      validator: 'boolean',
+      path
+    }
+  }
+}
+
+function number (value, path) {
+  if (value === undefined) return
+  if (!isNaN(value)) return
+
+  return {
+    validator: 'number',
+    path
+  }
+}
+
 module.exports = {
   notFalsey,
   url,
-  phone
+  phone,
+  enumeration,
+  boolean,
+  number
 }
