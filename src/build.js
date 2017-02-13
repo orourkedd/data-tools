@@ -12,7 +12,7 @@ const {
 const applyTransforms = curry((transforms, value) => {
   return reduce((p, transform) => {
     return transform(p)
-  }, value, transforms)
+  }, value, transforms || [])
 })
 
 const applyValidators = curry((validators, value, path, fieldDefinition) => {

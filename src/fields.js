@@ -73,7 +73,8 @@ function number (name, options = {}) {
     name,
     defaultValue: 0,
     transforms: options.transforms,
-    validators
+    validators,
+    defaultValue: options.defaultValue
   }
 }
 
