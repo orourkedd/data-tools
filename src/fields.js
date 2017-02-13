@@ -55,7 +55,8 @@ function enumeration (name, options = {}) {
   return {
     name,
     values: options.values,
-    validators: fieldValidators
+    validators: fieldValidators,
+    defaultValue: options.defaultValue
   }
 }
 
