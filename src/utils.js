@@ -1,5 +1,7 @@
-// const objectPath = require('object-path')
-//
-// function getErrorsForPath (path, errors) {
-//
-// }
+function isUndefined (v) {
+  return v === undefined
+}
+
+module.exports = {
+  isUndefined
+}

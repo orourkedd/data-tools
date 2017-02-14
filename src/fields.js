@@ -1,63 +1,78 @@
 const t = require('./transforms')
 const v = require('./validators')
 const uuid = require('uuid')
-const { merge } = require('ramda')
+const { merge, flatten, filter } = require('ramda')
+const { isUndefined } = require('./utils')
+
+function field (name, options) {
+  const s1 = { name }
+  const s2 = merge(s1, options)
+  const s3 = merge(s2, {
+    transforms: cleanList(options.transforms),
+    validators: cleanList(options.validators)
+  })
+  return s3
+}
+
+function toArray (a) {
+  return Array.isArray(a) ? a : [a]
+}
+
+function cleanList (a) {
+  const s1 = flatten([a])
+  const s2 = filter(v => v, s1)
+  return s2
+}
 
 function guid (name, options = {}) {
-  return {
-    name,
-    defaultValue: options.defaultValue === undefined ? uuid.v4 : options.defaultValue,
+  return field(name, {
+    defaultValue: options.defaultValue || uuid.v4,
     transforms: [t.stringTrim],
     validators: [v.notFalsey]
-  }
+  })
 }
 
 function text (name, options = {}) {
-  const transforms = [t.stringTrim].concat(options.transforms || [])
-  const validators = options.validators || []
+  const validators = toArray(options.validators)
   if (options.required === true) validators.push(v.notFalsey)
 
-  return {
-    name,
+  return field(name, merge(options, {
     defaultValue: '',
-    transforms,
+    transforms: [t.stringTrim, options.transforms],
     validators
-  }
+  }))
 }
 
 function url (name, options = {}) {
-  options.validators = (options.validators || []).concat(v.url)
+  options.validators = [options.validators, v.url]
   return text(name, options)
 }
 
 function phone (name, options = {}) {
-  options.validators = (options.validators || []).concat(v.phone)
-  options.transforms = (options.transforms || []).concat(t.stringNumbersOnly)
+  options.validators = [options.validators, v.phone]
+  options.transforms = [t.stringNumbersOnly, options.transforms]
   return text(name, options)
 }
 
 function address (name, options = {}) {
+  const textOptions = {}
+  if (options.required) textOptions.required = true
   return {
     name,
     fields: [
-      text('address1', { required: options.required }),
-      text('address2', { required: options.required }),
-      text('city', { required: options.required }),
-      text('state', { required: options.required, transforms: [t.stringToUpperCase] }),
-      text('zip', { required: options.required })
+      text('address1', textOptions),
+      text('address2', textOptions),
+      text('city', textOptions),
+      text('state', merge(textOptions, { transforms: [t.stringToUpperCase] })),
+      text('zip', textOptions)
     ]
   }
 }
 
 function enumeration (name, options = {}) {
-  const fieldValidators = (options.validators || []).concat(v.enumeration)
-
-  return {
-    name,
-    values: options.values,
-    validators: fieldValidators,
-    defaultValue: options.defaultValue
-  }
+  return field(name, merge(options, {
+    validators: [options.validators, v.enumeration]
+  }))
 }
 
 function boolean (name, options = {}) {
@@ -67,14 +82,9 @@ function boolean (name, options = {}) {
 }
 
 function number (name, options = {}) {
-  const validators = (options.validators || []).concat(v.number)
-
-  return {
-    name,
-    transforms: options.transforms,
-    validators,
-    defaultValue: options.defaultValue
-  }
+  return field(name, merge(options, {
+    validators: [options.validators, v.number]
+  }))
 }
 
 module.exports = {
