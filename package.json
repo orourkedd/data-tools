@@ -7,11 +7,10 @@
     "test": "jest",
     "demo": "npm run transpile; node lib/demo/repos.js",
     "transpile": "babel src --out-dir lib --source-maps",
-    "precommit": "standard; npm run transpile && npm test && uver && git add -A",
-    "deploy": "standard && npm run transpile && npm test",
+    "precommit": "npm run transpile && npm test && uver && git add -A",
+    "deploy": "npm run transpile && npm test",
     "publish-please": "publish-please",
-    "prepublish": "publish-please guard",
-    "lint": "standard"
+    "prepublish": "publish-please guard"
   },
   "author": "orourkedd",
   "license": "MIT",
@@ -31,16 +30,6 @@
     "jest-cli": "^17.0.3",
     "publish-please": "^2.2.0",
     "simple-protocol-http": "^0.5.0",
-    "standard": "^8.6.0",
     "uver-cli": "^1.1.0"
-  },
-  "standard": {
-    "parser": "babel-eslint",
-    "globals": [
-      "describe",
-      "test",
-      "it",
-      "fail"
-    ]
   }
 }
