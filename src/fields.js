@@ -29,7 +29,7 @@ function guid(name, options = {}) {
     ? options.defaultValue
     : uuid.v4
   return field(name, {
-    defaultValue: options.defaultValue || uuid.v4,
+    defaultValue,
     transforms: [t.stringTrim],
     validators: [v.notFalsey]
   })
