@@ -27,9 +27,9 @@ function cleanList(a) {
 function guid(name, options = {}) {
   const defaultValue = has('defaultValue', options)
     ? options.defaultValue
-    : uuid.v4()
+    : uuid.v4
   return field(name, {
-    defaultValue,
+    defaultValue: options.defaultValue || uuid.v4,
     transforms: [t.stringTrim],
     validators: [v.notFalsey]
   })
